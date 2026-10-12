@@ -7,25 +7,26 @@ An AI-powered front-desk receptionist for small medical and service businesses, 
 Small clinics and service businesses lose leads every day simply because nobody replies to a WhatsApp enquiry fast enough. "Speed to lead" — how quickly a business responds to a new enquiry — is one of the strongest predictors of whether that enquiry converts into a booking. This system closes that gap by responding in seconds, 24/7, with a consistent, warm, on-brand tone, and it's built to be reusable across different businesses and channels, not a one-off script.
 
 ## Architecture
+```
 WhatsApp message received
-│
-▼
-WhatsApp Trigger (n8n)
-│
-▼
-AI Agent (LangChain agent node)
-│
-├── Anthropic Chat Model (Claude Sonnet 5) — generates the reply
-│
-└── Simple Memory (buffer window, keyed by sender’s phone number)
-— gives the agent conversation history per customer
-│
-▼
-Send Message (WhatsApp Business API)
-│
-▼
-Reply delivered to customer
-
+        │
+        ▼
+  WhatsApp Trigger (n8n)
+        │
+        ▼
+  AI Agent (LangChain agent node)
+        │
+        ├── Anthropic Chat Model (Claude Sonnet 5) — generates the reply
+        │
+        └── Simple Memory (buffer window, keyed by sender's phone number)
+                — gives the agent conversation history per customer
+        │
+        ▼
+  Send Message (WhatsApp Business API)
+        │
+        ▼
+  Reply delivered to customer
+```
 **Components:**
 - **Trigger** — n8n's native WhatsApp Trigger node, listening for incoming messages via the WhatsApp Business API
 - **Brain** — An AI Agent node powered by Claude Sonnet 5 (Anthropic), driven by a custom system prompt that defines the business persona, tone, and conversation goals
