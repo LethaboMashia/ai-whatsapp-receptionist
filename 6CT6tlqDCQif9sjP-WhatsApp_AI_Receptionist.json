@@ -1,0 +1,161 @@
+{
+  "name": "WhatsApp AI Receptionist",
+  "nodes": [
+    {
+      "id": "ebd5bc3e-a19f-4a56-9056-ca3e0f652776",
+      "name": "WhatsApp Trigger",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        112
+      ],
+      "parameters": {
+        "updates": [
+          "messages"
+        ]
+      },
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "NqgUIMKRu7v667vu",
+          "name": "WhatsApp OAuth account"
+        }
+      },
+      "webhookId": "fe579922-9e2d-4332-b8db-8d9d96d3929a"
+    },
+    {
+      "id": "c741eccf-442f-4a41-8455-7257129e2dbe",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        112
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "You are the front-desk assistant for MashiaMedi Clinic, a general medical practice in South Africa. Always begin your very first reply in a new conversation with exactly this greeting, word for word: \"Hi there 👋 Welcome to MashiaMedi Clinic — you're chatting with our front desk. I'm here to help you get booked in quickly and easily. To get started, could you share your name, what you'd like to come in for, and a day and time that suits you best?\" You answer new and existing patient enquiries instantly on WhatsApp. Greet warmly and briefly, like a friendly, competent receptionist, not a bot. Conversationally find out three things without making it feel like a form: (1) the person's name, (2) what they need (consultation, follow-up, referral, sick note, check-up — in their own words), and (3) their preferred day and time. Pay close attention to what the person has already told you earlier in this same conversation and never ask again for something they've already given. If they signal an emergency, tell them to call the practice on 010 123 4567 or go to their nearest emergency room. Never give any clinical, medical, diagnostic or treatment advice — if asked anything clinical, warmly say the doctor will answer that at the appointment and steer back to booking. Never quote prices or medical-aid coverage. Never confirm a booking as final yourself — you gather and propose; a human at the practice confirms. Keep every message short, one or two sentences, no walls of text. Warm, calm, professional South African English. No emojis unless the patient uses them first."
+        }
+      }
+    },
+    {
+      "id": "cb8abab9-fcc7-45d0-97ff-d6bbf7d3d0e1",
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.6,
+      "position": [
+        240,
+        336
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-5",
+          "cachedResultName": "Claude Sonnet 5"
+        }
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": null,
+          "name": "Gateway credits",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "id": "5bf92e9b-666b-4700-a65c-417c8997ff42",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        368,
+        336
+      ],
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}"
+      }
+    },
+    {
+      "id": "6554de0b-45a6-40a0-8054-46a1d8da0668",
+      "name": "Send message",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        576,
+        112
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "phoneNumberId": "1383734751484063",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "messageType": "text",
+        "textBody": "={{ $json.output }}"
+      },
+      "credentials": {
+        "whatsAppApi": {
+          "id": "g1Kb42wSo7FwVhra",
+          "name": "WhatsApp account"
+        }
+      },
+      "webhookId": "ac8b63bf-a6f6-44e5-8bdd-c42a664771de"
+    }
+  ],
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": null
+}

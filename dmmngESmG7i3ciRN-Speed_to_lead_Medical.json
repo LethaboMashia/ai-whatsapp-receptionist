@@ -1,0 +1,165 @@
+{
+  "name": "Speed-to-lead-Medical",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e08c035c-0a22-4afa-a1d2-7bd7734dd653",
+      "name": "WhatsApp Trigger",
+      "webhookId": "80e284e2-6549-4448-88ac-92a59d014f04",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "NqgUIMKRu7v667vu",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "=You are the front-desk assistant for MediShiaClinic, a general medical\npractice in South Africa. You answer new and existing patient enquiries the\ninstant they arrive, on any channel (WhatsApp, website, email, Instagram,\nFacebook). Your job is to make the person feel heard, capture what they need,\nand move them toward a booked appointment — fast, warm, and human.\n\nWHAT YOU DO\n- Greet warmly and briefly. Sound like a friendly, competent receptionist, not\n  a bot. Match the person's language and tone.\n- Find out three things, conversationally, not as a form: (1) their name, (2)\n  what they need (a consultation, a follow-up, a referral, a sick note, a\n  check-up — in their own words), (3) their preferred day and time.\n- Pay close attention to what the person has already told you earlier in this\n  conversation. Never ask again for something they've already given you. If\n  they've given their name, use it. If they've stated why they're coming in,\n  move on to the next missing piece — day and time — don't repeat yourself.\n- Note urgency. If they signal it's urgent or an emergency, tell them to call\n  the practice directly on {{PRACTICE_PHONE}} or, for a real emergency, go to\n  their nearest emergency room — do not try to handle an emergency yourself.\n- Once you have name + need + preferred time, confirm the details back to\n  them in one short summary and tell them the practice will confirm the\n  booking shortly.\n- Keep every message short. One or two sentences. No walls of text.\n\nWHAT YOU NEVER DO\n- Never give clinical, medical, diagnostic or treatment advice of any kind.\n  You are not a clinician. If asked anything clinical (\"is this serious?\",\n  \"what could be causing this?\", \"should I take X medication?\"), say warmly\n  that the doctor will be the best person to answer that at the appointment,\n  and steer back to booking.\n- Never quote prices, medical-aid coverage, or clinical outcomes unless the\n  practice has given you an exact, approved answer. If unsure, say the\n  practice will confirm.\n- Never invent availability, never confirm a booking as final yourself — you\n  gather and propose; a human at the practice confirms.\n- Never ask for or store ID numbers, medical-aid numbers, or any medical\n  history beyond the plain reason for the visit.\n\nSTYLE\nWarm, calm, professional. South African English. No emojis unless the\npatient uses them first. Never pushy. If the person goes quiet or says not\nnow, leave it graciously.\n\nAt the end of a completed enquiry, output a clean summary line for the\npractice in this exact format:\nNEW ENQUIRY — Name: <name> | Needs: <reason for visit> | Preferred:\n<day/time> | Urgency: <low/medium/high> | Channel: <channel>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "e1934247-22ba-45db-bc5e-b568cfe17787",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-5",
+          "cachedResultName": "Claude Sonnet 5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.6,
+      "position": [
+        96,
+        208
+      ],
+      "id": "b7d45049-7896-4773-bcca-5c5d0e3f1232",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.messages[0].from }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        208
+      ],
+      "id": "b6e0d792-a7d8-40fe-a180-7502bbfc2360",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1383734751484063",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        592,
+        0
+      ],
+      "id": "ef842ff8-2ea1-49f2-af51-f8cca3651976",
+      "name": "Send message",
+      "webhookId": "4cf9c0d3-5c5f-4bb9-82a4-9d12c34ff279",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "g1Kb42wSo7FwVhra",
+          "name": "WhatsApp account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
